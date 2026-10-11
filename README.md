@@ -1,6 +1,14 @@
 # T2-Grupo-5-DSW-II
 PAGOYA Peru fintech tarjetas prepago - ES T2 reclamos.
 
+# Integrantes
+- SAID EDERSON OYOLA ROQUE
+- EVERT RATA MALDONADO
+- BRAYAN ERAZO FUNES
+- JUAN ALONSO ESTEBAN PAJUELO CHIPANA
+-JHOSIAS URIEL PASMIÑO SALDAÑA
+
+
 ## Servicios
 | Servicio | Puerto | Descripcion |
 |---|---|---|
