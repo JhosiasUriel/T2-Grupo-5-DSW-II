@@ -1,27 +1,77 @@
 {
 	"info": {
 		"name": "PAYGO-ES",
-		"description": "Evidencia ES T2 PAGOYA: P1 Eureka, P2 reclamos, P3 resolucion",
+		"description": "Flujo completo ES T2 PAGOYA: P1 Eureka, P2 reclamos, P3 resolucion. Ejecutar en orden (Run collection). Los IDs de reclamo se guardan automaticamente en reclamoId1 y reclamoId2.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
 		{ "key": "eureka", "value": "http://localhost:8761" },
 		{ "key": "reclamos", "value": "http://localhost:8081" },
-		{ "key": "resolucion", "value": "http://localhost:8082" }
+		{ "key": "resolucion", "value": "http://localhost:8082" },
+		{ "key": "reclamoId1", "value": "" },
+		{ "key": "reclamoId2", "value": "" }
 	],
 	"item": [
 		{
 			"name": "P1 - Eureka",
 			"item": [
-				{ "name": "Dashboard", "request": { "method": "GET", "url": "{{eureka}}" } },
-				{ "name": "Apps registradas", "request": { "method": "GET", "url": "{{eureka}}/eureka/apps" } }
+				{
+					"name": "Dashboard",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Dashboard responde 200', () => pm.response.to.have.status(200));"
+								]
+							}
+						}
+					],
+					"request": { "method": "GET", "url": "{{eureka}}" }
+				},
+				{
+					"name": "Apps registradas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Eureka responde 200', () => pm.response.to.have.status(200));",
+									"pm.test('MS-RECLAMOS registrado', () => pm.expect(pm.response.text()).to.include('MS-RECLAMOS'));",
+									"pm.test('MS-RESOLUCION registrado', () => pm.expect(pm.response.text()).to.include('MS-RESOLUCION'));"
+								]
+							}
+						}
+					],
+					"request": { "method": "GET", "url": "{{eureka}}/eureka/apps" }
+				}
 			]
 		},
 		{
 			"name": "P2 - Reclamos",
 			"item": [
 				{
-					"name": "Registrar",
+					"name": "Registrar reclamo 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"const r = pm.response.json();",
+									"pm.collectionVariables.set('reclamoId1', r.numreclamo);",
+									"pm.test('Defaults: estado 1, analista No asignado, observacion por evaluar', () => {",
+									"    pm.expect(r.estado).to.eql(1);",
+									"    pm.expect(r.analista).to.eql('No asignado');",
+									"    pm.expect(r.observacion).to.eql('por evaluar');",
+									"});"
+								]
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"url": "{{reclamos}}/reclamos",
@@ -29,12 +79,60 @@
 						"body": { "mode": "raw", "raw": "{\"fechareclamo\":\"2026-10-10\",\"nomcliente\":\"Juan Perez\",\"ultimos4tarjeta\":\"1234\",\"motivo\":\"consumo desconocido\"}" }
 					}
 				},
-				{ "name": "Consultar por numero", "request": { "method": "GET", "url": "{{reclamos}}/reclamos/1" } },
 				{
-					"name": "Actualizar",
+					"name": "Registrar reclamo 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 201', () => pm.response.to.have.status(201));",
+									"pm.collectionVariables.set('reclamoId2', pm.response.json().numreclamo);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"url": "{{reclamos}}/reclamos",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"fechareclamo\":\"2026-10-10\",\"nomcliente\":\"Maria Lopez\",\"ultimos4tarjeta\":\"5678\",\"motivo\":\"cargo no reconocido\"}" }
+					}
+				},
+				{
+					"name": "Consultar reclamo 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Devuelve el reclamo consultado', () => pm.expect(pm.response.json().numreclamo).to.eql(Number(pm.collectionVariables.get('reclamoId1'))));"
+								]
+							}
+						}
+					],
+					"request": { "method": "GET", "url": "{{reclamos}}/reclamos/{{reclamoId1}}" }
+				},
+				{
+					"name": "Actualizar reclamo 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Observacion actualizada', () => pm.expect(pm.response.json().observacion).to.eql('revision'));"
+								]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
-						"url": "{{reclamos}}/reclamos/1",
+						"url": "{{reclamos}}/reclamos/{{reclamoId1}}",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": { "mode": "raw", "raw": "{\"analista\":\"Test\",\"estado\":1,\"observacion\":\"revision\"}" }
 					}
@@ -45,25 +143,97 @@
 			"name": "P3 - Resolucion",
 			"item": [
 				{
-					"name": "Procedente",
+					"name": "Procedente (reclamo 1)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Mensaje de procedente', () => pm.expect(pm.response.json().mensaje).to.include('procedente'));"
+								]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
-						"url": "{{resolucion}}/resoluciones/1",
+						"url": "{{resolucion}}/resoluciones/{{reclamoId1}}",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": { "mode": "raw", "raw": "{\"estado\":2,\"analista\":\"Ana Riesgos\",\"observacion\":\"cargo duplicado confirmado\"}" }
 					}
 				},
 				{
-					"name": "Improcedente",
+					"name": "Verificar reclamo 1 resuelto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const r = pm.response.json();",
+									"pm.test('Estado 2 (procedente)', () => pm.expect(r.estado).to.eql(2));",
+									"pm.test('Analista asignado', () => pm.expect(r.analista).to.eql('Ana Riesgos'));",
+									"pm.test('Observacion de resolucion', () => pm.expect(r.observacion).to.eql('cargo duplicado confirmado'));"
+								]
+							}
+						}
+					],
+					"request": { "method": "GET", "url": "{{reclamos}}/reclamos/{{reclamoId1}}" }
+				},
+				{
+					"name": "Improcedente (reclamo 2)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Mensaje de improcedente', () => pm.expect(pm.response.json().mensaje).to.include('improcedente'));"
+								]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
-						"url": "{{resolucion}}/resoluciones/2",
+						"url": "{{resolucion}}/resoluciones/{{reclamoId2}}",
 						"header": [{ "key": "Content-Type", "value": "application/json" }],
 						"body": { "mode": "raw", "raw": "{\"estado\":3,\"analista\":\"Luis Riesgos\",\"observacion\":\"consumo validado por cliente\"}" }
 					}
 				},
 				{
-					"name": "No existe",
+					"name": "Verificar reclamo 2 resuelto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"const r = pm.response.json();",
+									"pm.test('Estado 3 (improcedente)', () => pm.expect(r.estado).to.eql(3));",
+									"pm.test('Analista asignado', () => pm.expect(r.analista).to.eql('Luis Riesgos'));"
+								]
+							}
+						}
+					],
+					"request": { "method": "GET", "url": "{{reclamos}}/reclamos/{{reclamoId2}}" }
+				},
+				{
+					"name": "No existe (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('Status 404 para reclamo inexistente', () => pm.response.to.have.status(404));"
+								]
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"url": "{{resolucion}}/resoluciones/999999",
