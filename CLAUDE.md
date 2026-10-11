@@ -1,6 +1,6 @@
-# claude.md
+# CLAUDE.md
 
-Claude debe seguir primero las instrucciones de [agents.md](agents.md), que contiene el contexto del proyecto, los servicios, las reglas de Git y cómo validar cambios.
+Claude debe seguir primero las instrucciones de [AGENTS.md](AGENTS.md), que contiene el contexto del proyecto, los servicios, las reglas de Git y cómo validar cambios.
 
 ## Reglas específicas para Claude
 - Antes de empezar una tarea, confirma en qué rama estás (`git branch --show-current`). Si estás en `main`, crea una rama nueva con `git switch -c nombre-de-la-tarea`.

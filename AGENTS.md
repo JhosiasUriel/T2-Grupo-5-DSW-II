@@ -1,4 +1,4 @@
-# agents.md
+# AGENTS.md
 
 Instrucciones para agentes de IA que trabajen en este repositorio.
 
