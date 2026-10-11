@@ -8,10 +8,22 @@ PAGOYA Peru fintech tarjetas prepago - ES T2 reclamos.
 | ms-reclamos | 8081 | Registro, consulta por numero, actualizacion (pendiente) |
 | ms-resolucion | 8082 | Resolucion via Feign, estado 2/3 (paso 3) |
 
+## Base de datos
+`ms-reclamos` usa MySQL 8 en Docker Compose. Antes de arrancar los servicios, levantar la base:
+
+```
+cd database
+docker compose up -d
+```
+
+- MySQL: `localhost:5510` (base `appdb`, usuario `app`, password `password`).
+- phpMyAdmin: http://localhost:3410 (servidor `mysqldb`, usuario `app`, password `password`).
+
 ## Orden arranque
-1. eureka-server
-2. ms-reclamos
-3. ms-resolucion
+1. database (`docker compose up -d`)
+2. eureka-server
+3. ms-reclamos
+4. ms-resolucion
 
 ## Paso 1 verificado
 Eureka en http://localhost:8761 con MS-RECLAMOS y MS-RESOLUCION UP. Ver docs/evidencia/paso3-eureka-apps.xml.
