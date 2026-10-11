@@ -1,0 +1,77 @@
+{
+	"info": {
+		"name": "PAYGO-ES",
+		"description": "Evidencia ES T2 PAGOYA: P1 Eureka, P2 reclamos, P3 resolucion",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{ "key": "eureka", "value": "http://localhost:8761" },
+		{ "key": "reclamos", "value": "http://localhost:8081" },
+		{ "key": "resolucion", "value": "http://localhost:8082" }
+	],
+	"item": [
+		{
+			"name": "P1 - Eureka",
+			"item": [
+				{ "name": "Dashboard", "request": { "method": "GET", "url": "{{eureka}}" } },
+				{ "name": "Apps registradas", "request": { "method": "GET", "url": "{{eureka}}/eureka/apps" } }
+			]
+		},
+		{
+			"name": "P2 - Reclamos",
+			"item": [
+				{
+					"name": "Registrar",
+					"request": {
+						"method": "POST",
+						"url": "{{reclamos}}/reclamos",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"fechareclamo\":\"2026-10-10\",\"nomcliente\":\"Juan Perez\",\"ultimos4tarjeta\":\"1234\",\"motivo\":\"consumo desconocido\"}" }
+					}
+				},
+				{ "name": "Consultar por numero", "request": { "method": "GET", "url": "{{reclamos}}/reclamos/1" } },
+				{
+					"name": "Actualizar",
+					"request": {
+						"method": "PUT",
+						"url": "{{reclamos}}/reclamos/1",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"analista\":\"Test\",\"estado\":1,\"observacion\":\"revision\"}" }
+					}
+				}
+			]
+		},
+		{
+			"name": "P3 - Resolucion",
+			"item": [
+				{
+					"name": "Procedente",
+					"request": {
+						"method": "PUT",
+						"url": "{{resolucion}}/resoluciones/1",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"estado\":2,\"analista\":\"Ana Riesgos\",\"observacion\":\"cargo duplicado confirmado\"}" }
+					}
+				},
+				{
+					"name": "Improcedente",
+					"request": {
+						"method": "PUT",
+						"url": "{{resolucion}}/resoluciones/2",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"estado\":3,\"analista\":\"Luis Riesgos\",\"observacion\":\"consumo validado por cliente\"}" }
+					}
+				},
+				{
+					"name": "No existe",
+					"request": {
+						"method": "PUT",
+						"url": "{{resolucion}}/resoluciones/999999",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "raw": "{\"estado\":2,\"analista\":\"x\",\"observacion\":\"y\"}" }
+					}
+				}
+			]
+		}
+	]
+}
